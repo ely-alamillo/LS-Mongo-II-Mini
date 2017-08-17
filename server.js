@@ -14,6 +14,51 @@ const STATUS_USER_ERROR = 422;
 app.use(bodyParser.json());
 
 // Your API will be built out here.
+app.get('/users', (req, res) => {
+  Person.find({}, (err, persons) => {
+    if (err) {
+      res.status(STATUS_SERVER_ERROR)
+      res.json({error: 'there was an internal server error'})
+      return;
+    }
+    res.json(persons);
+  })
+});
+
+app.get('/users/:direction', (req, res) => {
+  let { direction } = req.params;
+  if (direction === 'asc') direction = 1;
+  else if (direction === 'desc') direction === -1;
+  else {
+    res.status(STATUS_USER_ERROR);
+    res.json({error: `please use 'asc' or 'desc' to indicate the sort direction`});
+    return;
+  }
+  Person.find({})
+    .sort({lastName: direction})
+    .exec((err, persons) => {
+      if (err) {
+        res.status(STATUS_SERVER_ERROR)
+        res.json({error: 'there was an internal server error'})
+        return;
+      }
+      res.json(persons);
+    });
+});
+
+app.get('/user-get-friends/:id', (req, res) => {
+  const { id } = req.params;
+  Person.findById(id)
+    .select('friends')
+    .exec((err, friends) => {
+      if (err) {
+        res.status(STATUS_SERVER_ERROR)
+        res.json({error: 'the id provided did not match any in the db'});
+        return;
+      }
+      res.json(friends);
+    })
+});
 
 
 mongoose.Promise = global.Promise;
